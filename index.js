@@ -120,12 +120,17 @@ new ControlPanel(controlsElement5, {
     const angleRadians =
         Math.atan2(point3.y - point2.y, point3.x - point2.x) -
         Math.atan2(point1.y - point2.y, point1.x - point2.x);
-    const angleDegrees = (angleRadians * 180) / Math.PI;
-    return Math.abs(angleDegrees);
+    let angleDegrees = (angleRadians * 180.0) / Math.PI;
+
+    if(angleDegrees > 180.0) {
+      angleDegrees = 360 - angleDegrees;
+    }
+    return angleDegrees;
   }
   let squatCounter = 0
   
   let squatDetected = false;
+  let stage = "";
   
   var squatDetection = function(results) {
         //  console.log(results);
@@ -141,27 +146,49 @@ new ControlPanel(controlsElement5, {
             const rightHip = landmarks[24];
             const rightKnee = landmarks[26];
             const rightAnkle = landmarks[28 ];
-            // console.log("left", leftHip, leftKnee, leftAnkle);
-            // console.log("right", rightHip, rightKnee, rightAnkle);
-            // Calculate angles for both legs
-            const leftLegAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
-            const rightLegAngle = calculateAngle(rightHip, rightKnee, rightAnkle);
-            console.log("leftLegAngle", leftLegAngle);
-            console.log("rightLegAngle", rightLegAngle);
-            // Detect a squat if both legs bend at a certain angle
-            if (leftLegAngle > 160 && rightLegAngle > 160) {
-                if (!squatDetected) {
-                    squatDetected = true;
-                    squatCounter++;
-                    squatCountElement.textContent = `Squat Count: ${squatCounter}`;
-                }
-            } else {
-                squatDetected = false;
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+  
+
+            // Knee joint angles
+            let leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
+            leftKneeAngle = Math.round((leftKneeAngle + Number.EPSILON) * 100) / 100
+            let rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle);
+            rightKneeAngle = Math.round((rightKneeAngle + Number.EPSILON) * 100) / 100
+            console.log("leftKneeAngle", leftKneeAngle);
+            console.log("rightKneeAngle", rightKneeAngle);
+
+
+            // shoulder hip knee angle
+            let lefthipAngle = calculateAngle(leftShoulder, leftHip, leftKnee);
+            lefthipAngle = Math.round((lefthipAngle + Number.EPSILON) * 100) / 100
+            let righthipAngle = calculateAngle(rightShoulder, rightHip,rightKnee);
+            righthipAngle = Math.round((righthipAngle + Number.EPSILON) * 100) / 100
+            console.log("lefthipAngle", lefthipAngle);
+            console.log("righthipAngle", righthipAngle);
+
+            if(leftKneeAngle > 169 && rightKneeAngle > 169 && lefthipAngle > 100 && righthipAngle> 100){
+              stage = "UP";
+            }else if(leftKneeAngle <= 90 && rightKneeAngle <= 90 && lefthipAngle <= 100 && righthipAngle <= 100 && stage == "UP" ){
+              stage = "DOWN";
+              squatCounter++;
+              squatCountElement.textContent = `Squat Count: ${squatCounter}`;
             }
-        }else{
-          squatDetected = false;
-        }
+
+        //     // Detect a squat if both legs bend at a certain angle
+        //     if (leftLegAngle > 160 && rightLegAngle > 160) {
+        //         if (!squatDetected) {
+        //             squatDetected = true;
+        //             squatCounter++;
+        //             squatCountElement.textContent = `Squat Count: ${squatCounter}`;
+        //         }
+        //     } else {
+        //         squatDetected = false;
+        //     }
+        // }else{
+        //   squatDetected = false;
+        // }
 
         // requestAnimationFrame(drawSquatDetection);
-    
+        }
   }
